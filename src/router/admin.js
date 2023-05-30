@@ -9,18 +9,36 @@ router.use((req, res, next) => {
 });
 
 router.post('/user', async (req, res) => {
-    try {
-        const novoUser = await User.create({
-            nome: req.body.nome,
-            email: req.body.email,
-            senha: req.body.senha
-        })
-        res.status(201).json(novoUser)
-        console.log('Usuário criado')
+    var erros = []
 
-    } catch (err) {
-        res.status(500).send(err.message)
+    if (!req.body.nome || typeof req.body.nome == undefined || req.body.nome == null) {
+        erros.push({ texto: "Nome inválido" })
     }
+    if (!req.body.email || typeof req.body.email == undefined || req.body.email == null) {
+        erros.push({ texto: "email inválido" })
+    }
+    if (!req.body.senha || typeof req.body.senha == undefined || req.body.senha == null) {
+        erros.push({ texto: "Senha inválida" })
+    }
+    if (erros.length > 0) {
+        res.status(500).send(erros)
+    }
+    else {
+        try {
+            const novoUser = await User.create({
+                nome: req.body.nome,
+                email: req.body.email,
+                senha: req.body.senha
+            })
+            res.status(201).json(novoUser)
+            console.log('Usuário criado')
+
+        } catch (err) {
+            res.status(500).send(err.message)
+        }
+    }
+
+
 });
 
 router.get('/user', async (req, res) => {
