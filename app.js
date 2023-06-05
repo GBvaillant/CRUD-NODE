@@ -5,6 +5,9 @@ dotenv.config()
 const port = 5500
 const mongoose = require('mongoose')
 const admin = require('./src/router/admin')
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
+
 //configs
 
 app.use(express.json())
