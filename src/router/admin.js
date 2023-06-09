@@ -28,8 +28,8 @@ router.post('/user', async (req, res) => {
     if (typeof req.body.senha == undefined || req.body.senha == null) {
         erros.push({ texto: "Senha inválida" })
     }
-    if (req.body.senha.length < 6){ 
-        erros.push({texto: "A senha precisa ter pelo menos 6 digitos"})
+    if (req.body.senha.length < 6) {
+        erros.push({ texto: "A senha precisa ter pelo menos 6 digitos" })
     }
     if (!req.body.senha) {
         erros.push({ texto: "Senha obrigatória" })
@@ -61,8 +61,6 @@ router.post('/user', async (req, res) => {
             res.status(500).send(err.message)
         }
     }
-
-
 });
 
 router.get('/users', async (req, res) => {
@@ -109,6 +107,18 @@ router.delete('/user/:id', async (req, res) => {
         res.status(500).send(err.message)
     }
 });
+
+router.post('/user/login', async (req, res) => {
+
+    if (!req.body.email) {
+        res.status(422).send({ texto: "Email obrigatório" })
+    }
+    if (!req.body.senha) {
+        res.status(422).send({ texto: "Senha obrigatória" })
+    }
+
+
+})
 
 
 
