@@ -109,14 +109,23 @@ router.delete('/user/:id', async (req, res) => {
 });
 
 router.post('/user/login', async (req, res) => {
-
+    // Validações
     if (!req.body.email) {
-        res.status(422).send({ texto: "Email obrigatório" })
+        return res.status(422).send({ texto: "Email obrigatório" })
     }
     if (!req.body.senha) {
-        res.status(422).send({ texto: "Senha obrigatória" })
+        return res.status(422).send({ texto: "Senha obrigatória" })
     }
 
+    const user = await User.findOne({ email: req.body.email })
+    if (!user) {
+        return res.status(422).send({ texto: "Usuário não encontrado" })
+    }
+
+    const checkSenha = await bcrypt.compare(req.body.senha, user.senha)
+    if (!checkSenha) {
+        return res.status(422).send({ texto: "Senha inválida" })
+    }
 
 })
 
