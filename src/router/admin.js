@@ -2,13 +2,43 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/User')
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
-// router.use((req, res, next) => {
-//     console.log('date: ' + new Date())
 
-//     next()
-// });
+// Public router
+router.get('/', (req, res) => {
+    res.status(200).json({ texto: 'Bem Vindo(a)!!' })
+})
 
+// Private router
+router.get('/user/:id', checkToken, async (req, res) => {
+    const id = req.params.id
+
+    const user = await User.findById(id, '-senha')
+
+    if (!user) {
+        return res.status(404).json({ texto: 'Usuário não encontrado' })
+    }
+    res.status(200).json({ texto: `Bem vindo ${user.nome}!!` })
+})
+function checkToken(req, res, next) {
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+
+    if (!token) {
+        return res.status(401).json({ texto: 'Acesso negado' })
+    }
+    try {
+        const secret = process.env.SECRET
+
+        jwt.verify(token, secret)
+        next()
+
+    } catch (err) {
+        res.status(400).json({ texto: 'Token inválido' })
+    }
+}
+// Registrar user
 router.post('/user', async (req, res) => {
     var erros = []
     const userConfirm = await User.findOne({ email: req.body.email })
@@ -73,11 +103,11 @@ router.get('/users', async (req, res) => {
     }
 });
 
-router.get('/user/:id', async (req, res) => {
+router.get('/users/:id', async (req, res) => {
     try {
         const id = req.params.id
-        const user = await User.findById(id)
-        res.status(200).json(user)
+        const user = await User.findById(id, '-senha')
+        return res.status(200).json(user)
     }
     catch (err) {
         res.status(500).send(err.message)
@@ -127,6 +157,18 @@ router.post('/user/login', async (req, res) => {
         return res.status(422).send({ texto: "Senha inválida" })
     }
 
+    try {
+        const secret = process.env.SECRET
+        const token = jwt.sign(
+            {
+                id: User._id,
+            },
+            secret
+        )
+        res.status(200).json({ texto: "Autenticação feita com sucesso", token })
+    } catch (err) {
+        res.status(500).send(err.message)
+    }
 })
 
 
