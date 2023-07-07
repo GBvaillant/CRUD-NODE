@@ -95,7 +95,7 @@ router.post('/user', async (req, res) => {
 
 router.get('/users', async (req, res) => {
     try {
-        const users = await User.find({})
+        const users = await User.find({}, '-senha')
         res.status(200).json(users)
     }
     catch (err) {
@@ -104,25 +104,40 @@ router.get('/users', async (req, res) => {
 });
 
 router.get('/users/:id', async (req, res) => {
+    const id = req.params.id
     try {
-        const id = req.params.id
         const user = await User.findById(id, '-senha')
         return res.status(200).json(user)
     }
     catch (err) {
         res.status(500).send(err.message)
     }
-});
+}
+);
 
 router.patch('/user/:id', async (req, res) => {
-    try {
-        const id = req.params.id
-        const editUser = await User.findByIdAndUpdate(id, req.body, { new: true })
-        res.status(200).json(editUser)
-        console.log('Usuário editado')
-    }
-    catch (err) {
-        res.status(500).send(err.message)
+    var erros = []
+    if (req.body.senha !== req.body.confirmSenha)
+        erros.push({ texto: "Senhas não conferem !!" })
+    if (erros.length > 0)
+        res.status(500).send(erros)
+    else {
+        try {
+            const id = req.params.id
+            const salt = await bcrypt.genSalt(12)
+            const senhaHash = await bcrypt.hash(req.body.senha, salt)
+            const editUser = await User.findByIdAndUpdate(
+                id,
+                req.body,
+                { new: true },
+                req.body.senha = senhaHash
+            )
+            res.status(200).json(editUser)
+            console.log('Usuário editado')
+        }
+        catch (err) {
+            res.status(500).send(err.message)
+        }
     }
 });
 
@@ -130,7 +145,7 @@ router.delete('/user/:id', async (req, res) => {
     try {
         const id = req.params.id
         const deleteUser = await User.findByIdAndRemove(id)
-        res.status(200).json({ msg: `Usuário: ${deleteUser.nome} foi de base.` })
+        res.status(200).json({ msg: `Usuário: ${deleteUser.nome} foi deletado` })
         console.log('Usuário deletado')
     }
     catch (err) {
